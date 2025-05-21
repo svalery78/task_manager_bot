@@ -16,7 +16,6 @@ class Task(Base):
     remind_at = Column(DateTime, nullable=True)
     is_completed = Column(Boolean, default=False)
     completed_at = Column(DateTime, nullable=True)
-    pet_xp = Column(Integer, default=0)  # Опыт виртуального питомца
 
 class Database:
     def __init__(self):
@@ -24,8 +23,23 @@ class Database:
         self.Session = sessionmaker(bind=self.engine)
         Base.metadata.create_all(self.engine)
     
-    def get_session(self):
-        return self.Session()
+    def add_task(self, user_id: int, text: str, remind_at=None) -> int:
+        """Добавляет новую задачу в базу данных"""
+        session = self.Session()
+        try:
+            new_task = Task(
+                user_id=user_id,
+                text=text,
+                remind_at=remind_at
+            )
+            session.add(new_task)
+            session.commit()
+            return new_task.id
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            session.close()
 
-# Инициализация БД при первом импорте
+# Инициализация БД
 db = Database()
